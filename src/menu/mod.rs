@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    cell::RefCell,
+    ops::{Deref, DerefMut},
+};
 
 #[repr(u8)]
 #[derive(PartialEq)]
@@ -22,7 +25,7 @@ impl TryFrom<u8> for Category {
         }
     }
 }
-/// Trait that defines common behaviour between Meals, Drinks, Desserts
+/// Defines common behaviour between Meals, Drinks, Desserts
 pub trait Edible {
     fn name_description(&self) -> &str;
     fn name(&self) -> &str {
@@ -36,13 +39,13 @@ pub trait Edible {
     }
     fn price(&self) -> u16;
     fn current_price(&self) -> u16;
-    fn update_price(&mut self, value: u8);
+    fn update_price(&self, value: u8);
 }
 /// Abstract data struct with common fields between any Edible
 pub struct EdibleData {
     name_description: &'static str,
     price: u16,
-    current_price: u16,
+    current_price: RefCell<u16>,
 }
 
 impl EdibleData {
@@ -50,7 +53,7 @@ impl EdibleData {
         Self {
             name_description,
             price,
-            current_price: price,
+            current_price: RefCell::new(price),
         }
     }
 }
@@ -63,10 +66,10 @@ impl Edible for EdibleData {
         self.price
     }
     fn current_price(&self) -> u16 {
-        self.current_price
+        *self.current_price.borrow()
     }
-    fn update_price(&mut self, value: u8) {
-        self.current_price = (self.price as u32 * value as u32 / 100) as u16;
+    fn update_price(&self, value: u8) {
+        *self.current_price.borrow_mut() = (self.price as u32 * value as u32 / 100) as u16;
     }
 }
 
@@ -121,6 +124,17 @@ pub enum AnyEdible {
     AnyMeal(MealItem),
     AnyDrink(DrinkItem),
     AnyDessert(DessertItem),
+}
+
+impl AnyEdible {
+    /// Returns a shared ref to the edible within EdibleItem thats within AnyEdible
+    pub fn extract(&self) -> &dyn Edible {
+        match self {
+            AnyEdible::AnyMeal(m) => &m.0,
+            AnyEdible::AnyDrink(d) => &d.0,
+            AnyEdible::AnyDessert(ds) => &ds.0,
+        }
+    }
 }
 
 /// Generates AnyEdible variant corrresponding to its category
