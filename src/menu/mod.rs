@@ -2,12 +2,14 @@ use std::ops::{Deref, DerefMut};
 
 #[repr(u8)]
 #[derive(PartialEq)]
+/// Categorizes Edibles into their Categories
 pub enum Category {
     Meal = 0,
     Drink = 1,
     Dessert = 2,
 }
 
+/// Not essential but good to have
 impl TryFrom<u8> for Category {
     type Error = ();
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -20,6 +22,23 @@ impl TryFrom<u8> for Category {
         }
     }
 }
+/// Trait that defines common behaviour between Meals, Drinks, Desserts
+pub trait Edible {
+    fn name_description(&self) -> &str;
+    fn name(&self) -> &str {
+        self.splitter().0
+    }
+    fn description(&self) -> &str {
+        self.splitter().1
+    }
+    fn splitter(&self) -> (&str, &str) {
+        self.name_description().split_once(" - ").unwrap()
+    }
+    fn price(&self) -> u16;
+    fn current_price(&self) -> u16;
+    fn update_price(&mut self, value: u8);
+}
+/// Abstract data struct with common fields between any Edible
 pub struct EdibleData {
     name_description: &'static str,
     price: u16,
@@ -50,31 +69,18 @@ impl Edible for EdibleData {
         self.current_price = (self.price as u32 * value as u32 / 100) as u16;
     }
 }
-pub trait Edible {
-    fn name_description(&self) -> &str;
-    fn name(&self) -> &str {
-        self.splitter().0
-    }
-    fn description(&self) -> &str {
-        self.splitter().1
-    }
-    fn splitter<'b>(&self) -> (&str, &str) {
-        self.name_description().split_once(" - ").unwrap()
-    }
-    fn price(&self) -> u16;
-    fn current_price(&self) -> u16;
-    fn update_price(&mut self, value: u8);
-}
 
+/// Wraps Edible structs and categorizes them into Category variants through const Generic
 pub struct EdibleItem<T: Edible, const C: u8>(pub T);
 
 impl<T: Edible, const C: u8> EdibleItem<T, C> {
+    /// Allows extraction of category of an EdibleItem
     pub fn category() -> Category {
         match C {
             0 => Category::Meal,
             1 => Category::Drink,
             2 => Category::Dessert,
-            _ => panic!("invalid category const"),
+            _ => panic!("invalid category"),
         }
     }
 }
@@ -105,17 +111,20 @@ impl<T: Edible, const C: u8> std::fmt::Display for EdibleItem<T, C> {
     }
 }
 
-pub type MealItem = EdibleItem<EdibleData, { Category::Meal as u8 }>;
-pub type DrinkItem = EdibleItem<EdibleData, { Category::Drink as u8 }>;
-pub type DessertItem = EdibleItem<EdibleData, { Category::Dessert as u8 }>;
+/// Custom types for corresponding categories
+type MealItem = EdibleItem<EdibleData, { Category::Meal as u8 }>;
+type DrinkItem = EdibleItem<EdibleData, { Category::Drink as u8 }>;
+type DessertItem = EdibleItem<EdibleData, { Category::Dessert as u8 }>;
 
-/// This enum Allows Heterogenous collections
+/// Allows Heterogenous collections and data extraction pattern matching based on category
 pub enum AnyEdible {
     AnyMeal(MealItem),
     AnyDrink(DrinkItem),
     AnyDessert(DessertItem),
 }
 
+/// Generates AnyEdible variant corrresponding to its category
+/// reduces verbosity of instantiating an edible item
 pub fn edible(name_description: &'static str, category: Category, price: u16) -> AnyEdible {
     let data = EdibleData::new(name_description, price);
     match category {
