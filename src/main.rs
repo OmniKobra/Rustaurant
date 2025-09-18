@@ -1,8 +1,11 @@
-use rustaurant::{
-    AnyEdible, Category::*, Rustaurant,
-    edible,
+use rustaurant::{AnyEdible, Category::*, Rustaurant, edible};
+use tokio::{
+    join,
+    time::{Duration, Sleep, sleep},
 };
-fn main() {
+
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     let full_menu: Vec<AnyEdible> = vec![
         // MEALS
         edible(

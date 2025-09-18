@@ -4,9 +4,10 @@ use std::{
 };
 
 #[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Default)]
 /// Categorizes Edibles into their Categories
 pub enum Category {
+    #[default]
     Meal = 0,
     Drink = 1,
     Dessert = 2,
@@ -78,7 +79,7 @@ pub struct EdibleItem<T: Edible, const C: u8>(pub T);
 
 impl<T: Edible, const C: u8> EdibleItem<T, C> {
     /// Allows extraction of category of an EdibleItem
-    pub fn category() -> Category {
+    pub fn category(&self) -> Category {
         match C {
             0 => Category::Meal,
             1 => Category::Drink,
@@ -127,12 +128,12 @@ pub enum AnyEdible {
 }
 
 impl AnyEdible {
-    /// Returns a shared ref to the edible within EdibleItem thats within AnyEdible
-    pub fn extract(&self) -> &dyn Edible {
+    /// Returns tuple with a shared ref to the edible within EdibleItem thats within AnyEdible and the category of the EdibleItem
+    pub fn extract(&self) -> (&dyn Edible, Category) {
         match self {
-            AnyEdible::AnyMeal(m) => &m.0,
-            AnyEdible::AnyDrink(d) => &d.0,
-            AnyEdible::AnyDessert(ds) => &ds.0,
+            AnyEdible::AnyMeal(m) => (&m.0, m.category()),
+            AnyEdible::AnyDrink(d) => (&d.0, d.category()),
+            AnyEdible::AnyDessert(ds) => (&ds.0, ds.category()),
         }
     }
 }
