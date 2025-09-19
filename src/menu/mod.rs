@@ -4,7 +4,7 @@ use std::{
 };
 
 #[repr(u8)]
-#[derive(PartialEq, Default)]
+#[derive(PartialEq, Default, Copy, Clone)]
 /// Categorizes Edibles into their Categories
 pub enum Category {
     #[default]
