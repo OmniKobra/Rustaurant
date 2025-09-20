@@ -1,6 +1,10 @@
-use super::Rustaurant;
+use super::{Order, Rustaurant};
 use coin_flip::{Coin, flip_coin};
 use rand::prelude::*;
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 pub struct Customer {
     pub count: u32,
@@ -9,7 +13,7 @@ pub struct Customer {
 }
 
 impl Customer {
-    pub fn place_orders(&mut self, resto: &mut Rustaurant) {
+    pub async fn place_orders(&mut self, resto: &mut Rustaurant<'_>) {
         let mut rng = rand::rng();
         for i in 0..3 {
             self.handle_order(i, resto, &mut rng);
@@ -43,6 +47,13 @@ impl Customer {
             }
             sum
         };
+        let outstanding = self.balance as i16 - total as i16;
+        if outstanding < 0 {
+            let payable_amount = self.balance as i16 + outstanding;
+            resto.take_payment(payable_amount as u32);
+        } else {
+            resto.take_payment(total as u32);
+        }
     }
 
     fn wants_edible() -> bool {

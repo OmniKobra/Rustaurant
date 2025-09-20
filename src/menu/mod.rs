@@ -106,7 +106,7 @@ impl<T: Edible, const C: u8> std::fmt::Display for EdibleItem<T, C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}\n{}\nUsual Price: {}\nCurrent Price: {}",
+            "{}\n{}\nUsual Price: {} RS\nCurrent Price: {} RS\n",
             self.name(),
             self.description(),
             self.price(),
@@ -134,6 +134,15 @@ impl AnyEdible {
             AnyEdible::AnyMeal(m) => (&m.0, m.category()),
             AnyEdible::AnyDrink(d) => (&d.0, d.category()),
             AnyEdible::AnyDessert(ds) => (&ds.0, ds.category()),
+        }
+    }
+}
+impl std::fmt::Display for AnyEdible {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AnyEdible::AnyMeal(m) => write!(f, "{m}"),
+            AnyEdible::AnyDrink(d) => write!(f, "{d}"),
+            AnyEdible::AnyDessert(ds) => write!(f, "{ds}"),
         }
     }
 }

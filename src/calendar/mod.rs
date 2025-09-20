@@ -1,19 +1,24 @@
-use chrono::prelude::*;
+pub use chrono::prelude::*;
 
-struct Calendar {
+pub struct Calendar {
     seconds_elapsed: u32,
     start_date: DateTime<Utc>,
 }
 
 impl Calendar {
-    pub fn advance(&mut self) {
-        self.seconds_elapsed += 1;
+    pub fn advance(&mut self, seconds: u32) {
+        self.seconds_elapsed += seconds;
+    }
+    pub fn start_seconds(&self) -> i64 {
+        self.start_date.timestamp()
     }
     pub fn time(&self) -> DateTime<Local> {
-        let start = self.start_date.timestamp();
-        DateTime::from_timestamp(start + self.seconds_elapsed as i64, 0)
+        let start = self.start_seconds();
+        let rn = DateTime::from_timestamp(start + self.seconds_elapsed as i64, 0)
             .unwrap()
-            .with_timezone(&Local)
+            .with_timezone(&Local);
+
+        rn
     }
 }
 impl std::fmt::Display for Calendar {

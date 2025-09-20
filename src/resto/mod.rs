@@ -40,9 +40,9 @@ impl<'a> Rustaurant<'a> {
         self.find_edible(name, category).extract().0
     }
 
-    pub fn receive_customer(&mut self) {
+    pub async fn receive_customer(&mut self) {
         self.customer_count += 1;
-        todo!();
+        // todo!();
         Customer {
             count: self.customer_count,
             balance: 100,
@@ -76,7 +76,9 @@ impl<'a> Rustaurant<'a> {
         self.edible(name, category)
     }
 
-    pub fn take_payment(&mut self) {}
+    pub fn take_payment(&mut self, amount: u32) {
+        self.revenue += amount;
+    }
 
     pub fn net_revenue(&self) -> i32 {
         self.revenue as i32 - self.expenses as i32
