@@ -13,7 +13,7 @@ pub struct Customer {
 }
 
 impl Customer {
-    pub async fn place_orders(&mut self, resto: &mut Rustaurant<'_>) {
+    pub fn place_orders(&mut self, resto: &mut Rustaurant<'_>) {
         let mut rng = rand::rng();
         for i in 0..3 {
             self.handle_order(i, resto, &mut rng);

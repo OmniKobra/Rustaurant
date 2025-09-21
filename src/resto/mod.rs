@@ -1,14 +1,37 @@
+use rand::Rng;
+
 use super::{AnyEdible, Category, Customer, Edible, Order, OrderStatus};
 use std::collections::HashMap;
+
+struct Account {
+    balance: u32,
+    revenue: u32,
+    expenses: u32,
+    monthly_expenses: u32,
+    pub order_count: u32,
+    pub customer_count: u32,
+}
+
+impl Account {
+    pub fn new() -> Self {
+        Self {
+            balance: 0,
+            revenue: 0,
+            expenses: 0,
+            monthly_expenses: 10_000,
+            customer_count: 0,
+            order_count: 0,
+        }
+    }
+}
+
 pub struct Rustaurant<'a> {
     meal_menu: Vec<&'a AnyEdible>,
     drink_menu: Vec<&'a AnyEdible>,
     dessert_menu: Vec<&'a AnyEdible>,
     orders: HashMap<u32, Order<'a>>,
-    customer_count: u32,
-    order_count: u32,
-    revenue: u32,
-    expenses: u32,
+    customers: Vec<Customer>,
+    account: Account,
 }
 
 impl<'a> Rustaurant<'a> {
@@ -18,10 +41,8 @@ impl<'a> Rustaurant<'a> {
             drink_menu: filter_menu(full_menu, Category::Drink),
             dessert_menu: filter_menu(full_menu, Category::Dessert),
             orders: HashMap::new(),
-            customer_count: 0,
-            order_count: 0,
-            revenue: 0,
-            expenses: 0,
+            customers: Vec::new(),
+            account: Account::new(),
         }
     }
 
@@ -40,22 +61,22 @@ impl<'a> Rustaurant<'a> {
         self.find_edible(name, category).extract().0
     }
 
-    pub async fn receive_customer(&mut self) {
-        self.customer_count += 1;
-        // todo!();
-        Customer {
-            count: self.customer_count,
-            balance: 100,
+    pub fn receive_customer(&mut self) {
+        self.account.customer_count += 1;
+        let mut c = Customer {
+            count: self.account.customer_count,
+            balance: rand::rng().random_range(50..=120),
             orders: [None; 3],
-        }
-        .place_orders(self);
+        };
+        c.place_orders(self);
+        self.customers.push(c);
     }
 
     pub fn take_order(&mut self, name: &'a str, customer: u32, category: Category) -> &Order<'a> {
-        self.order_count += 1;
-        let count: u32 = self.order_count;
+        self.account.order_count += 1;
+        let count: u32 = self.account.order_count;
         self.orders.insert(
-            self.order_count,
+            count,
             Order {
                 name,
                 count,
@@ -65,7 +86,8 @@ impl<'a> Rustaurant<'a> {
                 ..Default::default()
             },
         );
-        &self.orders.get(&self.order_count).unwrap()
+        self.account.expenses += (self.edible(name, category).current_price() / 2) as u32;
+        &self.orders.get(&count).unwrap()
     }
     pub fn get_order(&self, count: u32) -> &Order<'a> {
         &self.orders.get(&count).unwrap()
@@ -77,11 +99,11 @@ impl<'a> Rustaurant<'a> {
     }
 
     pub fn take_payment(&mut self, amount: u32) {
-        self.revenue += amount;
+        self.account.revenue += amount;
     }
 
     pub fn net_revenue(&self) -> i32 {
-        self.revenue as i32 - self.expenses as i32
+        self.account.revenue as i32 - self.account.expenses as i32
     }
 
     pub fn meal_menu(&self) -> &Vec<&'a AnyEdible> {
